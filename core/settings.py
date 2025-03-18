@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+    API_V1_STR: str
+    PROJECT_NAME: str
 
 
 settings = Settings()

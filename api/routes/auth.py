@@ -1,29 +1,21 @@
 from http import HTTPStatus
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from database import get_session
-from models.users import User
-from schemas.utils import Token
-from utils.security import (
+from api.deps import CurrentUser, GetSession, OAuthForm
+from core.security import (
     create_access_token,
-    get_current_user,
     verify_password,
 )
+from models.users import User
+from schemas.utils import Token
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
-OAuthForm = Annotated[OAuth2PasswordRequestForm, Depends()]
-Session = Annotated[Session, Depends(get_session)]
-CurrentUser = Annotated[User, Depends(get_current_user)]
-
 
 @router.post('/token', response_model=Token)
-async def login_for_access_token(form_data: OAuthForm, session: Session):
+async def login_for_access_token(form_data: OAuthForm, session: GetSession):
     user = await session.scalar(
         select(User).where(User.email == form_data.username)
     )

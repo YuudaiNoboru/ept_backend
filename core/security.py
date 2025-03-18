@@ -9,13 +9,15 @@ from pwdlib import PasswordHash
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import get_session
+from core.database import get_session
+from core.settings import settings
 from models.users import User
-from settings import settings
 
 pwd_context = PasswordHash.recommended()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token')
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f'{settings.API_V1_STR}/auth/token'
+)
 
 
 def get_password_hasd(password: str) -> str:

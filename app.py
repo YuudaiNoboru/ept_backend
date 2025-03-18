@@ -1,16 +1,11 @@
-from http import HTTPStatus
-
 from fastapi import FastAPI
 
-from routes import auth, users
-from schemas.utils import Message
+from api.main import api_router
+from core.settings import settings
 
-app = FastAPI()
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    openapi_url=f'{settings.API_V1_STR}/openapi.json',
+)
 
-app.include_router(auth.router)
-app.include_router(users.router)
-
-
-@app.get("/", status_code=HTTPStatus.OK, response_model=Message)
-async def root():
-    return {"message": "Olá Mundo!"}
+app.include_router(api_router, prefix=settings.API_V1_STR)
