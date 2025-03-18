@@ -6,7 +6,7 @@ from sqlalchemy import select
 from api.deps import GetSession
 from core.security import get_password_hasd
 from models.users import User
-from schemas.users import UserPublic, UserSchema
+from schemas.users import UserPublic, UserSchema, UserList
 
 router = APIRouter(prefix='/users', tags=['users'])
 
@@ -43,3 +43,10 @@ async def created_user(user: UserSchema, session: GetSession):
     await session.refresh(db_user)
 
     return db_user
+
+
+@router.get("/", response_model=UserList)
+async def read_users(session: GetSession):
+    result = await session.execute(select(User))
+    users = result.scalars().all()
+    return {'users': users}
