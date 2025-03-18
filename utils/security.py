@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 from zoneinfo import ZoneInfo
 
-from fastapi import Depends, HTTPExceptions
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jwt import DecodeError, decode, encode
 from pwdlib import PasswordHash
@@ -43,10 +43,10 @@ async def get_current_user(
     session: AsyncSession = Depends(get_session),
     token: str = Depends(oauth2_scheme),
 ):
-    credetials_exception = HTTPExceptions(
+    credetials_exception = HTTPException(
         status_code=HTTPStatus.UNAUTHORIZED,
         detail='As credenciais não são validas',
-        hearders={'WWW-Authenticate': 'Bearer'},
+        headers={'WWW-Authenticate': 'Bearer'},
     )
 
     try:
