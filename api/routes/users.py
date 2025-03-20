@@ -6,7 +6,7 @@ from sqlalchemy import select
 from api.deps import GetSession
 from core.security import get_password_hasd
 from models.users import User
-from schemas.users import UserPublic, UserSchema, UserList
+from schemas.users import UserList, UserPublic, UserSchema
 
 router = APIRouter(prefix='/users', tags=['users'])
 
