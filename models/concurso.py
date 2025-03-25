@@ -19,12 +19,12 @@ class Concurso:
     nome: Mapped[str] = mapped_column(nullable=False)
     data_prova: Mapped[date | None] = mapped_column(nullable=True)
     id_user_created: Mapped[int] = mapped_column(
-        ForeignKey('usuarios.id'), nullable=False
+        ForeignKey('users.id'), nullable=False
     )
 
     # Relacionamento
     user: Mapped['User'] = relationship(
-        back_populates='concursos', foreign_keys=[id_user_created], init=False
+        back_populates='concursos', init=False
     )
 
     created_at: Mapped[datetime] = mapped_column(

@@ -24,7 +24,6 @@ class User:
         back_populates='user',
         default_factory=list,
         init=False,
-        foreign_keys='Concurso.id_user_created',
     )
     created_at: Mapped[datetime] = mapped_column(
         init=False, server_default=func.now()
