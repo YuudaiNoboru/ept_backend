@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_session
 from core.settings import settings
-from models.users import User
+from models.usuario import Usuario
 
 pwd_context = PasswordHash.recommended()
 
@@ -64,7 +64,7 @@ async def get_current_user(
         raise credetials_exception
 
     user = await session.scalar(
-        select(User).where(User.email == subject_email)
+        select(Usuario).where(Usuario.email == subject_email)
     )
 
     if not user:

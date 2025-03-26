@@ -1,12 +1,13 @@
 from datetime import datetime
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel
 
-from schemas.users import UserPublic
+from core.validators import esta_em_branco
 
 
 class DisciplinaBase(BaseModel):
-    nome: str
+    nome:  Annotated[str, AfterValidator(esta_em_branco)]
 
 
 class DisciplinaCreate(DisciplinaBase):
@@ -15,8 +16,6 @@ class DisciplinaCreate(DisciplinaBase):
 
 class DisciplinaPublic(DisciplinaBase):
     id: int
-    id_user_created: int
-    user: UserPublic
     created_at: datetime
     updated_at: datetime
 
@@ -26,3 +25,7 @@ class DisciplinaPublic(DisciplinaBase):
 
 class DisciplinaList(BaseModel):
     disciplinas: list[DisciplinaPublic]
+
+
+class DisciplinaUpdate(BaseModel):
+    nome: Annotated[str | None, AfterValidator(esta_em_branco)] = None

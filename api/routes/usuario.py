@@ -5,17 +5,17 @@ from sqlalchemy import select
 
 from api.deps import GetSession
 from core.security import get_password_hasd
-from models.users import User
-from schemas.users import UserList, UserPublic, UserSchema
+from models.usuario import Usuario
+from schemas.usuario import UsuarioList, UsuarioPublic, UsuarioSchema
 
 router = APIRouter(prefix='/users', tags=['users'])
 
 
-@router.post('/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
-async def created_user(user: UserSchema, session: GetSession):
+@router.post('/', status_code=HTTPStatus.CREATED, response_model=UsuarioPublic)
+async def created_user(user: UsuarioSchema, session: GetSession):
     db_user = await session.scalar(
-        select(User).where(
-            (User.username == user.username) | (User.email == user.email)
+        select(Usuario).where(
+            (Usuario.username == user.username) | (Usuario.email == user.email)
         )
     )
 
@@ -32,7 +32,7 @@ async def created_user(user: UserSchema, session: GetSession):
 
     hashed_password = get_password_hasd(user.password)
 
-    db_user = User(
+    db_user = Usuario(
         email=user.email,
         username=user.username,
         password=hashed_password,
@@ -45,8 +45,8 @@ async def created_user(user: UserSchema, session: GetSession):
     return db_user
 
 
-@router.get("/", response_model=UserList)
+@router.get("/", response_model=UsuarioList)
 async def read_users(session: GetSession):
-    result = await session.execute(select(User))
+    result = await session.execute(select(Usuario))
     users = result.scalars().all()
     return {'users': users}

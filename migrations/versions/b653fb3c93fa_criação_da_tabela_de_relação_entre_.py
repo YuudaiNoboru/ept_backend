@@ -1,8 +1,8 @@
-"""Inicio do DB
+"""Criação da tabela de relação entre concurso e disciplina.
 
-Revision ID: 4745db05de30
-Revises: ef634910ac06
-Create Date: 2025-03-25 17:33:59.238076
+Revision ID: b653fb3c93fa
+Revises: c227fb532882
+Create Date: 2025-03-26 14:47:59.332887
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '4745db05de30'
-down_revision: Union[str, None] = 'ef634910ac06'
+revision: str = 'b653fb3c93fa'
+down_revision: Union[str, None] = 'c227fb532882'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

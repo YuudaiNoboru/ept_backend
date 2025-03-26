@@ -8,7 +8,7 @@ from core.security import (
     create_access_token,
     verify_password,
 )
-from models.users import User
+from models.usuario import Usuario
 from schemas.utils import Token
 
 router = APIRouter(prefix='/auth', tags=['auth'])
@@ -17,7 +17,7 @@ router = APIRouter(prefix='/auth', tags=['auth'])
 @router.post('/token', response_model=Token)
 async def login_for_access_token(form_data: OAuthForm, session: GetSession):
     user = await session.scalar(
-        select(User).where(User.email == form_data.username)
+        select(Usuario).where(Usuario.email == form_data.username)
     )
 
     if not user:

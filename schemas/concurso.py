@@ -1,22 +1,27 @@
 from datetime import date, datetime
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel
+from typing_extensions import Annotated
+
+from core.validators import esta_em_branco
+from schemas.disciplina import DisciplinaPublic
 
 
 class ConcursoBase(BaseModel):
-    nome: str
-    data_prova: date | None
+    nome: Annotated[str, AfterValidator(esta_em_branco)]
+    data_prova: Optional[date] = None
 
 
 class ConcursoCreate(ConcursoBase):
-    pass
+    disciplinas_ids: list[int] | None = None
 
 
 class ConcursoPublic(ConcursoBase):
     id: int
-    id_user_created: int
     created_at: datetime
     updated_at: datetime
+    disciplinas: list[DisciplinaPublic] | None = None
 
     class Config:
         from_attributes = True
@@ -24,3 +29,9 @@ class ConcursoPublic(ConcursoBase):
 
 class ConcursoList(BaseModel):
     concursos: list[ConcursoPublic]
+
+
+class ConcursoUpdate(BaseModel):
+    nome: Annotated[str | None, AfterValidator(esta_em_branco)] = None
+    data_prova: date | None = None
+    disciplinas_ids: list[int] | None = None
