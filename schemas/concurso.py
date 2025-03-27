@@ -6,6 +6,7 @@ from typing_extensions import Annotated
 
 from core.validators import esta_em_branco
 from schemas.disciplina import DisciplinaPublic
+from schemas.assunto import AssuntoPublic
 
 
 class ConcursoBase(BaseModel):
@@ -15,6 +16,7 @@ class ConcursoBase(BaseModel):
 
 class ConcursoCreate(ConcursoBase):
     disciplinas_ids: list[int] | None = None
+    assuntos_ids: list[int] | None = None
 
 
 class ConcursoPublic(ConcursoBase):
@@ -22,6 +24,7 @@ class ConcursoPublic(ConcursoBase):
     created_at: datetime
     updated_at: datetime
     disciplinas: list[DisciplinaPublic] | None = None
+    assuntos: list[AssuntoPublic] | None = None
 
     class Config:
         from_attributes = True

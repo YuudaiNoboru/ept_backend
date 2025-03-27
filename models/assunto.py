@@ -25,7 +25,8 @@ class Assunto(Base):
         back_populates='assunto_pai',
         foreign_keys='[Assunto.id_assunto_pai]',
         cascade='all, delete-orphan',
-        lazy='selectin'
+        lazy='selectin',
+        overlaps="assunto_pai,subassuntos"  # Adicione esta linha
     )
 
     assunto_pai: Mapped[Optional['Assunto']] = relationship(

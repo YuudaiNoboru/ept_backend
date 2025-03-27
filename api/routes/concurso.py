@@ -3,10 +3,14 @@ from http import HTTPStatus
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 
 from api.deps import CurrentUser, GetSession
 from core.utils import update_schema
+from core.validators import validar_entidades
+from models.assunto import Assunto
 from models.concurso import Concurso
+from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
 from models.disciplina import Disciplina
 from schemas.concurso import (
     ConcursoCreate,
@@ -39,44 +43,41 @@ async def create_concurso(
             detail='Você já possui um concurso com este nome.',
         )
 
-    disciplinas = []
-    if concurso.disciplinas_ids:
-        stmt = select(Disciplina).where(
-            Disciplina.id.in_(concurso.disciplinas_ids),
-            Disciplina.usuario_id == current_user.id,
-        )
-        result = await session.execute(stmt)
-        disciplinas = result.scalars().all()
+    # Busca e valida disciplinas
+    disciplinas = await validar_entidades(
+        session, Disciplina, current_user.id, concurso.disciplinas_ids
+    )
 
-        found_ids = {d.id for d in disciplinas}
-        if len(found_ids) != len(concurso.disciplinas_ids):
-            missing_ids = set(concurso.disciplinas_ids) - found_ids
+    # Busca e valida assuntos
+    assuntos = await validar_entidades(
+        session, Assunto, current_user.id, concurso.assuntos_ids, options=[selectinload(Assunto.subassuntos)]
+    )
+
+    # Valida assuntos x disciplinas
+    disciplinas_ids = {d.id for d in disciplinas}
+    for assunto in assuntos:
+        if assunto.disciplina_id not in disciplinas_ids:
             raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND,
-                detail=f'Disciplinas não encontradas: {missing_ids}',
+                HTTPStatus.BAD_REQUEST,
+                detail=f'Assunto {assunto.id} não pertence às disciplinas selecionadas'
             )
 
-    try:
-        db_concurso = Concurso(
-            nome=concurso.nome,
-            data_prova=concurso.data_prova,
-            usuario_id=current_user.id,
-            disciplinas=disciplinas,
-        )
+    db_concurso = Concurso(
+        nome=concurso.nome,
+        data_prova=concurso.data_prova,
+        usuario_id=current_user.id,
+        disciplinas=disciplinas,
+        assuntos_relacionados=[
+            ConcursoDisciplinaAssunto(
+                disciplina_id=assunto.disciplina_id,
+                assunto_id=assunto.id
+            ) for assunto in assuntos
+        ]
+    )
 
-        session.add(db_concurso)
-        await session.commit()
-        await session.refresh(db_concurso, ['disciplinas'])
-
-        return db_concurso
-    except IntegrityError as e:
-        print('teste')
-        print(f'Integrity Error: {str(e)}')
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='Erro ao criar concurso.',
-        )
-
+    session.add(db_concurso)
+    await session.commit()
+    return db_concurso
 
 @router.get('/', response_model=ConcursoList)
 async def read_concursos(session: GetSession, current_user: CurrentUser):

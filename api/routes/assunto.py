@@ -10,7 +10,12 @@ from core.utils import update_schema
 from models.assunto import Assunto
 from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
 from models.disciplina import Disciplina
-from schemas.assunto import AssuntoCreate, AssuntoPublic, AssuntoUpdate
+from schemas.assunto import (
+    AssuntoCreate,
+    AssuntoPublic,
+    AssuntoSemSubassuntosPublic,
+    AssuntoUpdate,
+)
 from schemas.utils import Message
 
 router = APIRouter(prefix='/assunto', tags=['assunto'])
@@ -65,6 +70,15 @@ async def create_assunto(
             status_code=HTTPStatus.CONFLICT,
             detail='Já existe um assunto com este nome para esta disciplina.',
         )
+
+
+@router.get('/', response_model=list[AssuntoSemSubassuntosPublic])
+async def list_assuntos(session: GetSession, current_user: CurrentUser):
+    assuntos = await session.scalars(
+        select(Assunto).where(Assunto.usuario_id == current_user.id)
+    )
+
+    return assuntos.all()
 
 
 @router.get('/{assunto_id}', response_model=AssuntoPublic)

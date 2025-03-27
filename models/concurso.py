@@ -23,8 +23,14 @@ class Concurso(Base):
     usuario: Mapped['Usuario'] = relationship(back_populates='concursos')
 
     disciplinas: Mapped[list['Disciplina']] = relationship(
-        secondary='concurso_disciplina', 
+        secondary='concurso_disciplina',
         back_populates='concursos',
+        lazy='selectin'
+    )
+
+    assuntos_relacionados: Mapped[list['ConcursoDisciplinaAssunto']] = relationship(
+        back_populates='concurso',
+        cascade='all, delete-orphan',
         lazy='selectin'
     )
 
@@ -34,3 +40,7 @@ class Concurso(Base):
     updated_at: Mapped[datetime] = mapped_column(
         nullable=False, server_default=func.now(), onupdate=func.now()
     )
+
+    @property
+    def assuntos(self):
+        return [rel.assunto for rel in self.assuntos_relacionados]
