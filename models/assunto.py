@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,16 +14,25 @@ class Assunto(Base):
     disciplina_id: Mapped[int] = mapped_column(ForeignKey('disciplina.id'))
     usuario_id: Mapped[int] = mapped_column(ForeignKey('usuario.id'))
 
-    id_assunto_pai: Mapped[int | None] = mapped_column(
+    id_assunto_pai: Mapped[Optional[int]] = mapped_column(
         ForeignKey('assunto.id'),
         nullable=True
     )
 
     disciplina: Mapped['Disciplina'] = relationship(back_populates='assuntos')
 
-    subassunto: Mapped[list['Assunto']] = relationship(
+    subassuntos: Mapped[list['Assunto']] = relationship(
+        back_populates='assunto_pai',
+        foreign_keys='[Assunto.id_assunto_pai]',
+        cascade='all, delete-orphan',
+        lazy='selectin'
+    )
+
+    assunto_pai: Mapped[Optional['Assunto']] = relationship(
         back_populates='subassuntos',
-        remote_side=[id]
+        foreign_keys=[id_assunto_pai],  # Esclarece qual coluna é a FK
+        remote_side=[id],
+        lazy='selectin'
     )
 
     __table_args__ = (

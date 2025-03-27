@@ -4,6 +4,7 @@ from typing import Annotated
 from pydantic import AfterValidator, BaseModel
 
 from core.validators import esta_em_branco
+from schemas.assunto import AssuntoPublic
 
 
 class DisciplinaBase(BaseModel):
@@ -21,6 +22,14 @@ class DisciplinaPublic(DisciplinaBase):
 
     class Config:
         from_attributes = True
+
+
+class DisciplinaWithTotalAssuntoPublic(DisciplinaPublic):
+    total_assuntos: int
+
+
+class DisciplinaWithAssuntos(DisciplinaPublic):
+    assuntos: list[AssuntoPublic | None] = []
 
 
 class DisciplinaList(BaseModel):

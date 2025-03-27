@@ -3,10 +3,11 @@ from http import HTTPStatus
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 
 from api.deps import CurrentUser, GetSession
 from core.utils import update_schema
-from models.concurso import Concurso
+from models.assunto import Assunto
 from models.concurso_disciplina import ConcursoDisciplina
 from models.disciplina import Disciplina
 from schemas.disciplina import (
@@ -14,6 +15,8 @@ from schemas.disciplina import (
     DisciplinaList,
     DisciplinaPublic,
     DisciplinaUpdate,
+    DisciplinaWithAssuntos,
+    DisciplinaWithTotalAssuntoPublic,
 )
 from schemas.utils import Message
 
@@ -70,12 +73,51 @@ async def read_disciplinas(session: GetSession, current_user: CurrentUser):
     return {'disciplinas': disciplinas}
 
 
-@router.get('/{disciplina_id}', response_model=DisciplinaPublic)
+@router.get(
+    '/{disciplina_id}', response_model=DisciplinaWithTotalAssuntoPublic
+)
 async def read_disciplina(
     disciplina_id: int, session: GetSession, current_user: CurrentUser
 ):
-    db_disciplina = await session.scalar(
+    disciplina = await session.scalar(
         select(Disciplina).where(
+            (Disciplina.id == disciplina_id)
+            & (Disciplina.usuario_id == current_user.id)
+        )
+    )
+
+    if not disciplina:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Disciplina não encontrada',
+        )
+
+    total_assuntos = await session.scalar(
+        select(func.count(Assunto.id)).where(
+            Assunto.disciplina_id == disciplina_id
+        )
+    )
+
+    disciplina.total_assuntos = total_assuntos
+
+    return disciplina
+
+
+@router.get('/{disciplina_id}/assuntos', response_model=DisciplinaWithAssuntos)
+async def read_disciplina_assunto(
+    disciplina_id: int, session: GetSession, current_user: CurrentUser
+):
+    db_disciplina = await session.scalar(
+        select(Disciplina)
+        .options(
+            selectinload(Disciplina.assuntos)
+            .selectinload(Assunto.subassuntos)
+            # Se necessário, adicione mais níveis:
+            .selectinload(Assunto.subassuntos)
+            .selectinload(Assunto.subassuntos)
+            .selectinload(Assunto.subassuntos)
+        )
+        .where(
             (Disciplina.id == disciplina_id)
             & (Disciplina.usuario_id == current_user.id)
         )
@@ -167,7 +209,7 @@ async def delete_disciplina(
     if vinculado:
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
-            detail='Não é possível alterar disciplina vinculada a um concurso.'
+            detail='Não é possível alterar disciplina vinculada a um concurso.',
         )
 
     await session.delete(db_disciplina)
