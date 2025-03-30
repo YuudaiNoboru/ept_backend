@@ -5,8 +5,7 @@ from pydantic import AfterValidator, BaseModel
 from typing_extensions import Annotated
 
 from core.validators import esta_em_branco
-from schemas.disciplina import DisciplinaPublic
-from schemas.assunto import AssuntoPublic
+from schemas.disciplina import DisciplinaWithAssuntos, DisciplinaPublic
 
 
 class ConcursoBase(BaseModel):
@@ -19,19 +18,35 @@ class ConcursoCreate(ConcursoBase):
     assuntos_ids: list[int] | None = None
 
 
+class ConcursoPublicList(ConcursoBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class ConcursoPublic(ConcursoBase):
     id: int
     created_at: datetime
     updated_at: datetime
-    disciplinas: list[DisciplinaPublic] | None = None
-    assuntos: list[AssuntoPublic] | None = None
+    disciplinas: list[DisciplinaWithAssuntos | None] = []
+
+    class Config:
+        from_attributes = True
+
+class ConcursoDisciplinaPublic(ConcursoBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    disciplinas: list[DisciplinaPublic | None] = []
 
     class Config:
         from_attributes = True
 
 
 class ConcursoList(BaseModel):
-    concursos: list[ConcursoPublic]
+    concursos: list[ConcursoPublicList]
 
 
 class ConcursoUpdate(BaseModel):

@@ -87,12 +87,7 @@ async def read_assunto(
 ):
     assunto = await session.scalar(
         select(Assunto)
-        .options(
-            selectinload(Assunto.subassuntos)
-            .selectinload(Assunto.subassuntos)
-            .selectinload(Assunto.subassuntos)
-            .selectinload(Assunto.subassuntos)
-        )
+        .options(selectinload(Assunto.subassuntos))
         .where(
             (Assunto.id == assunto_id)
             & (Assunto.usuario_id == current_user.id)

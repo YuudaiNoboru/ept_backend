@@ -14,6 +14,7 @@ from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
 from models.disciplina import Disciplina
 from schemas.concurso import (
     ConcursoCreate,
+    ConcursoDisciplinaPublic,
     ConcursoList,
     ConcursoPublic,
     ConcursoUpdate,
@@ -50,7 +51,11 @@ async def create_concurso(
 
     # Busca e valida assuntos
     assuntos = await validar_entidades(
-        session, Assunto, current_user.id, concurso.assuntos_ids, options=[selectinload(Assunto.subassuntos)]
+        session,
+        Assunto,
+        current_user.id,
+        concurso.assuntos_ids,
+        options=[selectinload(Assunto.subassuntos)],
     )
 
     # Valida assuntos x disciplinas
@@ -59,7 +64,7 @@ async def create_concurso(
         if assunto.disciplina_id not in disciplinas_ids:
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
-                detail=f'Assunto {assunto.id} não pertence às disciplinas selecionadas'
+                detail=f'Assunto {assunto.id} não pertence às disciplinas selecionadas',
             )
 
     db_concurso = Concurso(
@@ -67,17 +72,21 @@ async def create_concurso(
         data_prova=concurso.data_prova,
         usuario_id=current_user.id,
         disciplinas=disciplinas,
-        assuntos_relacionados=[
+        concurso_disciplina_assuntos=[
             ConcursoDisciplinaAssunto(
-                disciplina_id=assunto.disciplina_id,
-                assunto_id=assunto.id
-            ) for assunto in assuntos
-        ]
+                disciplina_id=assunto.disciplina_id, assunto_id=assunto.id
+            )
+            for assunto in assuntos
+        ],
     )
 
     session.add(db_concurso)
     await session.commit()
+    await session.refresh(
+        db_concurso, ['disciplinas', 'concurso_disciplina_assuntos']
+    )
     return db_concurso
+
 
 @router.get('/', response_model=ConcursoList)
 async def read_concursos(session: GetSession, current_user: CurrentUser):
@@ -88,7 +97,7 @@ async def read_concursos(session: GetSession, current_user: CurrentUser):
     return {'concursos': concursos}
 
 
-@router.get('/{concurso_id}', response_model=ConcursoPublic)
+@router.get('/{concurso_id}', response_model=ConcursoDisciplinaPublic)
 async def read_concurso(
     concurso_id: int, session: GetSession, current_user: CurrentUser
 ):
@@ -107,6 +116,25 @@ async def read_concurso(
 
     return db_concurso
 
+
+@router.get('/{concurso_id}/assuntos', response_model=ConcursoPublic)
+async def read_concurso(
+    concurso_id: int, session: GetSession, current_user: CurrentUser
+):
+    db_concurso = await session.scalar(
+        select(Concurso).where(
+            (Concurso.id == concurso_id)
+            & (Concurso.usuario_id == current_user.id)
+        )
+    )
+
+    if not db_concurso:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Concurso não encontrado.',
+        )
+
+    return db_concurso
 
 @router.put('/{concurso_id}', response_model=ConcursoPublic)
 async def update_concurso(

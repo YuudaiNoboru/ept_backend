@@ -109,14 +109,7 @@ async def read_disciplina_assunto(
 ):
     db_disciplina = await session.scalar(
         select(Disciplina)
-        .options(
-            selectinload(Disciplina.assuntos)
-            .selectinload(Assunto.subassuntos)
-            # Se necessário, adicione mais níveis:
-            .selectinload(Assunto.subassuntos)
-            .selectinload(Assunto.subassuntos)
-            .selectinload(Assunto.subassuntos)
-        )
+        .options(selectinload(Disciplina.assuntos))
         .where(
             (Disciplina.id == disciplina_id)
             & (Disciplina.usuario_id == current_user.id)

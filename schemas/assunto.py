@@ -16,18 +16,6 @@ class AssuntoPublic(AssuntoBase):
     id: int
     subassuntos: list['AssuntoPublic'] | None = None
 
-    @model_validator(mode='before')
-    @classmethod
-    def load_subassuntos(cls, data):
-        if isinstance(data, Assunto):
-            # Força o carregamento dos subassuntos se necessário
-            if data.subassuntos is not None:
-                return {
-                    **data.__dict__,
-                    'subassuntos': data.subassuntos
-                }
-        return data
-
     class Config:
         from_attributes = True
 

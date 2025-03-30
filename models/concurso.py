@@ -1,10 +1,12 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import List, Optional
 
-from sqlalchemy import ForeignKey, UniqueConstraint, func
+from sqlalchemy import ForeignKey, UniqueConstraint, and_, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from models.assunto import Assunto
 from models.base import Base
+from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
 
 
 class Concurso(Base):
@@ -22,16 +24,18 @@ class Concurso(Base):
 
     usuario: Mapped['Usuario'] = relationship(back_populates='concursos')
 
-    disciplinas: Mapped[list['Disciplina']] = relationship(
+    disciplinas: Mapped[Optional[List['Disciplina']]] = relationship(
         secondary='concurso_disciplina',
         back_populates='concursos',
-        lazy='selectin'
+        lazy='selectin',
     )
 
-    assuntos_relacionados: Mapped[list['ConcursoDisciplinaAssunto']] = relationship(
-        back_populates='concurso',
-        cascade='all, delete-orphan',
-        lazy='selectin'
+    concurso_disciplina_assuntos: Mapped[List['ConcursoDisciplinaAssunto']] = (
+        relationship(
+            back_populates='concurso',
+            cascade='all, delete-orphan',
+            lazy='selectin',
+        )
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -40,7 +44,3 @@ class Concurso(Base):
     updated_at: Mapped[datetime] = mapped_column(
         nullable=False, server_default=func.now(), onupdate=func.now()
     )
-
-    @property
-    def assuntos(self):
-        return [rel.assunto for rel in self.assuntos_relacionados]
