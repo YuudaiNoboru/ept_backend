@@ -9,7 +9,6 @@ from models.base import Base
 
 if TYPE_CHECKING:
     from models.concurso import Concurso
-    from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
     from models.usuario import Usuario
 
 
@@ -43,10 +42,6 @@ class Disciplina(Base):
         secondary='concurso_disciplina',
         back_populates='disciplinas',
         lazy='selectin',
-    )
-
-    concurso_disciplina_assuntos: Mapped[List['ConcursoDisciplinaAssunto']] = (
-        relationship(back_populates='disciplina')
     )
 
     created_at: Mapped[datetime] = mapped_column(

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models.base import Base
 
 if TYPE_CHECKING:
-    from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
+    from models.concurso import Concurso
     from models.disciplina import Disciplina
 
 
@@ -35,8 +35,10 @@ class Assunto(Base):
         back_populates='subassuntos', remote_side=[id], lazy='selectin'
     )
 
-    concurso_disciplina_assuntos: Mapped[List['ConcursoDisciplinaAssunto']] = (
-        relationship(back_populates='assunto')
+    concursos: Mapped[list['Concurso']] = relationship(
+        secondary='concurso_assunto',
+        back_populates='assuntos',
+        lazy='selectin',
     )
 
     __table_args__ = (

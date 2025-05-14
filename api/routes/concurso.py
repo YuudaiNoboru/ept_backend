@@ -10,9 +10,9 @@ from core.utils import update_schema
 from core.validators import validar_entidades
 from models.assunto import Assunto
 from models.concurso import Concurso
-from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
 from models.disciplina import Disciplina
 from schemas.concurso import (
+    ConcursoAssuntoPublic,
     ConcursoCreate,
     ConcursoDisciplinaPublic,
     ConcursoList,
@@ -75,19 +75,12 @@ async def create_concurso(
         data_prova=concurso.data_prova,
         usuario_id=current_user.id,
         disciplinas=disciplinas,
-        concurso_disciplina_assuntos=[
-            ConcursoDisciplinaAssunto(
-                disciplina_id=assunto.disciplina_id, assunto_id=assunto.id
-            )
-            for assunto in assuntos
-        ],
+        assuntos=assuntos,
     )
 
     session.add(db_concurso)
     await session.commit()
-    await session.refresh(
-        db_concurso, ['disciplinas', 'concurso_disciplina_assuntos']
-    )
+    await session.refresh(db_concurso, ['disciplinas', 'assuntos'])
     return db_concurso
 
 
@@ -102,6 +95,26 @@ async def read_concursos(session: GetSession, current_user: CurrentUser):
 
 @router.get('/{concurso_id}', response_model=ConcursoDisciplinaPublic)
 async def read_concurso(
+    concurso_id: int, session: GetSession, current_user: CurrentUser
+):
+    db_concurso = await session.scalar(
+        select(Concurso).where(
+            (Concurso.id == concurso_id)
+            & (Concurso.usuario_id == current_user.id)
+        )
+    )
+
+    if not db_concurso:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Concurso não encontrado.',
+        )
+
+    return db_concurso
+
+
+@router.get('/{concurso_id}/assuntos', response_model=ConcursoAssuntoPublic)
+async def read_concurso_assunto(
     concurso_id: int, session: GetSession, current_user: CurrentUser
 ):
     db_concurso = await session.scalar(
@@ -156,6 +169,9 @@ async def update_concurso(
                 detail='Você já possui outro concurso com este nome.',
             )
 
+    novas_disciplinas = None
+    novos_assuntos = None
+
     if concurso_update.disciplinas_ids is not None:
         stmt = select(Disciplina).where(
             Disciplina.id.in_(concurso_update.disciplinas_ids),
@@ -176,18 +192,64 @@ async def update_concurso(
                 detail=f'Disciplinas não encontradas: {faltantes}',
             )
 
+    # Processa assuntos se fornecidos
+    if concurso_update.assuntos_ids is not None:
+        stmt = select(Assunto).where(
+            Assunto.id.in_(concurso_update.assuntos_ids),
+            Assunto.usuario_id == current_user.id,
+        )
+        result = await session.execute(stmt)
+        novos_assuntos = result.scalars().all()
+
+        if len(novos_assuntos) != len(concurso_update.assuntos_ids):
+            encontrados = {assunto.id for assunto in novos_assuntos}
+            faltantes = [
+                id
+                for id in concurso_update.assuntos_ids
+                if id not in encontrados
+            ]
+            raise HTTPException(
+                status_code=HTTPStatus.NOT_FOUND,
+                detail=f'Assuntos não encontrados: {faltantes}',
+            )
+
+        # Valida que assuntos pertencem às disciplinas
+        # Se disciplinas foram atualizadas, usa as novas; senão,
+        # usa as existentes
+        disciplinas_ids = (
+            {d.id for d in novas_disciplinas}
+            if novas_disciplinas is not None
+            else {d.id for d in db_concurso.disciplinas}
+        )
+
+        for assunto in novos_assuntos:
+            if assunto.disciplina_id not in disciplinas_ids:
+                raise HTTPException(
+                    status_code=HTTPStatus.BAD_REQUEST,
+                    detail=(
+                        f'Assunto {assunto.id} não pertence às disciplinas'
+                        ' selecionadas'
+                    ),
+                )
+    # Atualiza o modelo apenas se disciplinas ou assuntos foram fornecidos
+    if novas_disciplinas is not None:
         db_concurso.disciplinas = novas_disciplinas
+
+    if novos_assuntos is not None:
+        db_concurso.assuntos = novos_assuntos
 
     db_concurso = update_schema(schema=concurso_update, model=db_concurso)
     db_concurso.updated_at = func.now()
 
     try:
         await session.commit()
-        await session.refresh(db_concurso, ['disciplinas', 'updated_at'])
+        await session.refresh(
+            db_concurso, ['disciplinas', 'assuntos', 'updated_at']
+        )
         return db_concurso
     except IntegrityError:
+        await session.rollback()
         raise HTTPException(
-            await session.rollback(),
             status_code=HTTPStatus.BAD_REQUEST,
             detail='Erro ao atualizar concurso.',
         )
@@ -207,7 +269,7 @@ async def delete_concurso(
     if not db_concurso:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='Concurso não encontrada.',
+            detail='Concurso não encontrado.',
         )
 
     await session.delete(db_concurso)

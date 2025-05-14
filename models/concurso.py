@@ -7,8 +7,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models.base import Base
 
 if TYPE_CHECKING:
+    from models.assunto import Assunto
     from models.concurso import Concurso
-    from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
     from models.disciplina import Disciplina
     from models.usuario import Usuario
 
@@ -34,12 +34,10 @@ class Concurso(Base):
         lazy='selectin',
     )
 
-    concurso_disciplina_assuntos: Mapped[List['ConcursoDisciplinaAssunto']] = (
-        relationship(
-            back_populates='concurso',
-            cascade='all, delete-orphan',
-            lazy='selectin',
-        )
+    assuntos: Mapped[Optional[List['Assunto']]] = relationship(
+        secondary='concurso_assunto',
+        back_populates='concursos',
+        lazy='selectin',
     )
 
     created_at: Mapped[datetime] = mapped_column(

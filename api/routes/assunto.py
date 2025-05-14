@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from api.deps import CurrentUser, GetSession
 from core.utils import update_schema
 from models.assunto import Assunto
-from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
+from models.concurso_assunto import ConcursoAssunto
 from models.disciplina import Disciplina
 from schemas.assunto import (
     AssuntoCreate,
@@ -38,7 +38,7 @@ async def create_assunto(
             detail='Disciplina não encontrada',
         )
 
-    if assunto.id_assunto_pai:
+    if assunto.id_assunto_pai is not None:
         assunto_pai = await session.scalar(
             select(Assunto).where(
                 (Assunto.id == assunto.id_assunto_pai)
@@ -121,8 +121,8 @@ async def delete_assunto(
         )
 
     vinculado = await session.scalar(
-        select(ConcursoDisciplinaAssunto)
-        .where(ConcursoDisciplinaAssunto.assunto_id == assunto_id)
+        select(ConcursoAssunto)
+        .where(ConcursoAssunto.assunto_id == assunto_id)
         .limit(1)
     )
 
