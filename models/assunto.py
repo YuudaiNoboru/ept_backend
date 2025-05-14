@@ -1,9 +1,13 @@
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
+
+if TYPE_CHECKING:
+    from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
+    from models.disciplina import Disciplina
 
 
 class Assunto(Base):

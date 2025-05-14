@@ -5,7 +5,7 @@ from pydantic import AfterValidator, BaseModel
 from typing_extensions import Annotated
 
 from core.validators import esta_em_branco
-from schemas.disciplina import DisciplinaWithAssuntos, DisciplinaPublic
+from schemas.disciplina import DisciplinaPublic, DisciplinaWithAssuntos
 
 
 class ConcursoBase(BaseModel):
@@ -26,6 +26,7 @@ class ConcursoPublicList(ConcursoBase):
     class Config:
         from_attributes = True
 
+
 class ConcursoPublic(ConcursoBase):
     id: int
     created_at: datetime
@@ -34,6 +35,7 @@ class ConcursoPublic(ConcursoBase):
 
     class Config:
         from_attributes = True
+
 
 class ConcursoDisciplinaPublic(ConcursoBase):
     id: int

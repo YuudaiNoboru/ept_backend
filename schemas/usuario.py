@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, AfterValidator
+from pydantic import AfterValidator, BaseModel, EmailStr
 from typing_extensions import Annotated
 
 from core.validators import esta_em_branco

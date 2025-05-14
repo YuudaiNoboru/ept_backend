@@ -202,7 +202,9 @@ async def delete_disciplina(
     if vinculado:
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
-            detail='Não é possível alterar disciplina vinculada a um concurso.',
+            detail=(
+                'Não é possível alterar disciplina vinculada a um concurso.'
+            ),
         )
 
     await session.delete(db_disciplina)

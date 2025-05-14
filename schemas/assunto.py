@@ -1,5 +1,4 @@
-from pydantic import BaseModel, model_validator
-from models.assunto import Assunto
+from pydantic import BaseModel
 
 
 class AssuntoBase(BaseModel):

@@ -1,12 +1,16 @@
 from datetime import date, datetime
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import ForeignKey, UniqueConstraint, and_, func
+from sqlalchemy import ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.assunto import Assunto
 from models.base import Base
-from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
+
+if TYPE_CHECKING:
+    from models.concurso import Concurso
+    from models.concurso_disciplina_assunto import ConcursoDisciplinaAssunto
+    from models.disciplina import Disciplina
+    from models.usuario import Usuario
 
 
 class Concurso(Base):

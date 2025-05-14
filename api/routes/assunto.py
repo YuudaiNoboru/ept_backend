@@ -155,7 +155,8 @@ async def update_assunto(
     session: GetSession,
     current_user: CurrentUser,
 ):
-    # Busca o assunto a ser atualizado, garantindo que ele pertença ao usuário autenticado
+    # Busca o assunto a ser atualizado, garantindo que ele pertença ao usuário
+    # autenticado
     db_assunto = await session.scalar(
         select(Assunto).where(
             (Assunto.id == assunto_id)
@@ -169,7 +170,8 @@ async def update_assunto(
             detail='Assunto não encontrado.',
         )
 
-    # Se for informado nova disciplina, verifique se a mesma existe e pertence ao usuário
+    # Se for informado nova disciplina, verifique se a mesma existe e pertence
+    # ao usuário
     if (
         assunto_update.disciplina_id is not None
         and assunto_update.disciplina_id != db_assunto.disciplina_id
@@ -186,7 +188,8 @@ async def update_assunto(
                 detail='Disciplina informada não encontrada.',
             )
 
-    # Se for informado novo assunto pai, verifica se ele existe e pertence à mesma disciplina
+    # Se for informado novo assunto pai, verifica se ele existe e pertence à
+    # mesma disciplina
     if assunto_update.id_assunto_pai is not None:
         # Evita que o assunto seja pai de si mesmo
         if assunto_update.id_assunto_pai == assunto_id:
@@ -213,7 +216,8 @@ async def update_assunto(
                 detail='Assunto pai não encontrado.',
             )
 
-    # Verifica conflito de nome para a mesma disciplina e usuário, se o nome for alterado
+    # Verifica conflito de nome para a mesma disciplina e usuário, se o nome
+    # for alterado
     if (
         assunto_update.nome is not None
         and assunto_update.nome != db_assunto.nome
@@ -235,10 +239,13 @@ async def update_assunto(
         if conflito:
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT,
-                detail='Já existe um assunto com este nome para esta disciplina.',
+                detail=(
+                    'Já existe um assunto com este nome para esta disciplina.'
+                ),
             )
 
-    # Atualiza os atributos do assunto utilizando a função utilitária (update_schema)
+    # Atualiza os atributos do assunto utilizando a função utilitária
+    # (update_schema)
     db_assunto = update_schema(schema=assunto_update, model=db_assunto)
 
     try:

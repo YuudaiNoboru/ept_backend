@@ -45,7 +45,7 @@ async def created_user(user: UsuarioSchema, session: GetSession):
     return db_user
 
 
-@router.get("/", response_model=UsuarioList)
+@router.get('/', response_model=UsuarioList)
 async def read_users(session: GetSession):
     result = await session.execute(select(Usuario))
     users = result.scalars().all()

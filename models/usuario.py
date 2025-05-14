@@ -4,6 +4,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
+from models.concurso import Concurso
+from models.disciplina import Disciplina
 
 
 class Usuario(Base):

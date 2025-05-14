@@ -16,8 +16,7 @@ async def validar_entidades(session, model, usuario_id, ids, options=None):
         return []
 
     stmt = select(model).where(
-        model.id.in_(ids),
-        model.usuario_id == usuario_id
+        model.id.in_(ids), model.usuario_id == usuario_id
     )
 
     if options:

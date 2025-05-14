@@ -8,7 +8,7 @@ from schemas.assunto import AssuntoPublic
 
 
 class DisciplinaBase(BaseModel):
-    nome:  Annotated[str, AfterValidator(esta_em_branco)]
+    nome: Annotated[str, AfterValidator(esta_em_branco)]
 
 
 class DisciplinaCreate(DisciplinaBase):
